@@ -96,6 +96,8 @@ if __name__ == "__main__" and sys.argv[1] == "train":
         # 第二个卷积层
         # 初始化ｗ,满足正态分布
         W_conv2 = tf.Variable(tf.truncated_normal([5,5,16,32],stddev=0.1))
-        b_conv2 = tf.Variable(tf.constant())
+        b_conv2 = tf.Variable(tf.constant(0.1,shape=[32],name="b_conv2"))
+
+        
                              
 
