@@ -22,6 +22,13 @@ Output volume size:
 (32+2×2-5)/1+1 = 32 spatically,so 32×32×10 
 
 ### 1.2 计算卷积层中的参数
+核大小　m*n
+
+上一层通道数　d
+
+此层核个数　ｑ
+
+$$ paramcounts = [(m\times n )+1]\times q $$
 ## 2. 激活函数 
 ### 2.1 ReLu
 ![](./doc/relu.png)

@@ -155,7 +155,7 @@ if __name__ =='__main__' and sys.argv[1]=='train':
         pool_strides = [1, 1, 1, 1]
         L2_pool = conv_layer(L1_pool, W_conv2, b_conv2, conv_strides, kernel_size, pool_strides, padding='SAME')
 　　　　　# 输出大小:
-　　　　　# 第一层参数　(５×５*１６+1) * ３２ = １２８３２
+　　　　　# 第二层参数　(５×５*１６+1) * ３２ = １２８３２
         # 输出大小　(16 - 1) /1 +1 =16 ; (20 - 1) /1 +1 =20 16×２０
 
         # 全连接层
@@ -163,8 +163,11 @@ if __name__ =='__main__' and sys.argv[1]=='train':
         W_fc1 = tf.Variable(tf.truncated_normal([16 * 20 * 32, 512], stddev=0.1), name="W_fc1")
         b_fc1 = tf.Variable(tf.constant(0.1, shape=[512]), name="b_fc1")
         h_pool2_flat = tf.reshape(L2_pool, [-1, 16 * 20*32])
+        # flatten 1 * ? * ? * 512 
+        # 输出　512 个节点
         h_fc1 = full_connect(h_pool2_flat, W_fc1, b_fc1)
- 
+ 　　　　# 输出层　参数　512 ×　(１６＊３２＊20 + 1)
+ 　　　　
  
         # dropout
         keep_prob = tf.placeholder(tf.float32)
