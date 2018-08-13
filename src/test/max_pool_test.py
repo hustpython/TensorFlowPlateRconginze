@@ -16,7 +16,7 @@ a=tf.reshape(a,[1,4,4,2])
 pooling=tf.nn.max_pool(a,[1,2,2,1],[1,2,2,1],padding='VALID')  
 with tf.Session() as sess:  
     print("image:")  
-    image:
+    
 # 矩阵形式
 # [[[[ 1.  2.]
 #    [ 3.  4.]

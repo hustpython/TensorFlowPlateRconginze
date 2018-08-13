@@ -168,19 +168,35 @@ if __name__ =='__main__' and sys.argv[1]=='train':
         h_fc1 = full_connect(h_pool2_flat, W_fc1, b_fc1)
  　　　　# 输出层　参数　512 ×　(１６＊３２＊20 + 1)
  　　　　
- 
-        # dropout
+        # dropout　防止过拟合
+        # 给一定的概率keep_prob 让某一部分节点"不起作用",不参与更新（<1)
+        # run和predice的时候keep_prob　＝　１
         keep_prob = tf.placeholder(tf.float32)
  
         h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
  
  
         # readout层
+        # 输出层１＊５１２　×　５１２　×　６　＝　６
         W_fc2 = tf.Variable(tf.truncated_normal([512, NUM_CLASSES], stddev=0.1), name="W_fc2")
         b_fc2 = tf.Variable(tf.constant(0.1, shape=[NUM_CLASSES]), name="b_fc2")
- 
+　　　　　# 输出层参数:(512+1)*6=3078
+
+
         # 定义优化器和训练op
         y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
+        # tf.nn.softmax_entropy_with_logits
+        # labels/logits:[batchsize,numclasses]
+        # 第一步:softmax 求属于某一类的概率:
+        # softmax(x)i = exp(xi)/(sum(exp(xj)))
+        # 输出向量:[batchsize,numclasses]
+        # 第二步:
+        # softmax的输出向量与样本的实际标签作一个交叉熵
+        # Ｈy'(y) = - sum(yi'log(yi))
+        # 其中　ｙi'指实际标签中第i个值[0,0,1,0,0]
+        # yi就是softmax的输出向量[y1,y2,y3，...]中第i个元素的值
+        # 显然yi越准确,结果的值越小(别忘记了前面的负号),最后求一个平均
+        
         cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y_conv))
         train_step = tf.train.AdamOptimizer((1e-4)).minimize(cross_entropy)
  
@@ -265,7 +281,9 @@ if __name__ =='__main__' and sys.argv[1]=='predict':
         h_fc1 = full_connect(h_pool2_flat, W_fc1, b_fc1)
  
  
-        # dropout
+        # dropout　防止过拟合
+        # 给一定的概率keep_prob 让某一部分节点"不起作用",不参与更新（<1)
+        # run和predice的时候keep_prob　＝　１
         keep_prob = tf.placeholder(tf.float32)
  
         h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
