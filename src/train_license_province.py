@@ -27,13 +27,24 @@ time_begin = time.time()
  
  
 # 定义输入节点，对应于图片像素值矩阵集合和图片标签(即所代表的数字)
+# shape = [None,SIZE] 第一维是自动计算的
+# 32 × 40 = 1280
 x = tf.placeholder(tf.float32, shape=[None, SIZE])
 y_ = tf.placeholder(tf.float32, shape=[None, NUM_CLASSES])
- 
+
+# shape = (?,32,40,1)
 x_image = tf.reshape(x, [-1, WIDTH, HEIGHT, 1])
- 
+
  
 # 定义卷积函数
+# 输入大小input 步长stride 核大小kernelsize paddingsize
+# 卷积的输出大小 outsize = (input + padding × 2  - Kersize) / stride + 1
+# 举例 输入图片大小 7 × 7,卷积核大小 3*3，步长1 ，padding 0
+# 输出大小 (7 + 2*1 - 3) / 1 + 1 = 7 × 7
+
+# relu 大于 0 返回 x,小于 0 返回 0
+# max_pool ,返回kernelsize中最大的元素
+# padding "SAME" 补0和原图尺寸一样 ; VALID 不继续补０
 def conv_layer(inputs, W, b, conv_strides, kernel_size, pool_strides, padding):
     L1_conv = tf.nn.conv2d(inputs, W, strides=conv_strides, padding=padding)
     L1_relu = tf.nn.relu(L1_conv + b)
@@ -48,19 +59,21 @@ if __name__ =='__main__' and sys.argv[1]=='train':
     # 第一次遍历图片目录是为了获取图片总数
     input_count = 0
     for i in range(0,NUM_CLASSES):
-        dir = '/home/mxq/Codes/TensorflowPlateRecognize/data/tf_car_license_dataset/train_images/training-set/chinese-characters/%s/' % i           # 这里可以改成你自己的图片目录，i为分类标签
+        dir = '/home/mxq/Codes/TensorFlowPlateRconginze/data/tf_car_license_dataset/train_images/training-set/chinese-characters/%s/' % i           # 这里可以改成你自己的图片目录，i为分类标签
         for rt, dirs, files in os.walk(dir):
             for filename in files:
                 input_count += 1
  
     # 定义对应维数和各维长度的数组
+    # inputsize : inputcount * 1280
     input_images = np.array([[0]*SIZE for i in range(input_count)])
+    # inputlabelsize : inputcount * NUMCLASS(6)
     input_labels = np.array([[0]*NUM_CLASSES for i in range(input_count)])
  
     # 第二次遍历图片目录是为了生成图片数据和标签
     index = 0
     for i in range(0,NUM_CLASSES):
-        dir = '/home/mxq/Codes/TensorflowPlateRecognize/data/tf_car_license_dataset/train_images/training-set/chinese-characters/%s/' % i          # 这里可以改成你自己的图片目录，i为分类标签
+        dir = '/home/mxq/Codes/TensorFlowPlateRconginze/data/tf_car_license_dataset/train_images/training-set/chinese-characters/%s/' % i          # 这里可以改成你自己的图片目录，i为分类标签
         for rt, dirs, files in os.walk(dir):
             for filename in files:
                 filename = dir + filename
@@ -76,11 +89,15 @@ if __name__ =='__main__' and sys.argv[1]=='train':
                             input_images[index][w+h*width] = 1
                 input_labels[index][i] = 1
                 index += 1
- 
+    # inputimages = [[1,0,(省略1276),0,1]，[0,1,(省略1276),0,1],...,[0,1,(省略1276),0,1]]
+    # inputlabels = [[1,0,0,0,0,0],[0,1,0,0,0,0],[0,0,1,0,0,0],...,[0,0,0,0,0,1]]
+
+    # 对验证数据集进行类似操作 =============================== 
+
     # 第一次遍历图片目录是为了获取图片总数
     val_count = 0
     for i in range(0,NUM_CLASSES):
-        dir = '/home/mxq/Codes/TensorflowPlateRecognize/data/tf_car_license_dataset/train_images/validation-set/chinese-characters/%s/' % i           # 这里可以改成你自己的图片目录，i为分类标签
+        dir = '/home/mxq/Codes/TensorFlowPlateRconginze/data/tf_car_license_dataset/train_images/validation-set/chinese-characters/%s/' % i           # 这里可以改成你自己的图片目录，i为分类标签
         for rt, dirs, files in os.walk(dir):
             for filename in files:
                 val_count += 1
@@ -92,7 +109,7 @@ if __name__ =='__main__' and sys.argv[1]=='train':
     # 第二次遍历图片目录是为了生成图片数据和标签
     index = 0
     for i in range(0,NUM_CLASSES):
-        dir = '/home/mxq/Codes/TensorflowPlateRecognize/data/tf_car_license_dataset/train_images/validation-set/chinese-characters/%s/' % i          # 这里可以改成你自己的图片目录，i为分类标签
+        dir = '/home/mxq/Codes/TensorFlowPlateRconginze/data/tf_car_license_dataset/train_images/validation-set/chinese-characters/%s/' % i          # 这里可以改成你自己的图片目录，i为分类标签
         for rt, dirs, files in os.walk(dir):
             for filename in files:
                 filename = dir + filename
@@ -109,25 +126,40 @@ if __name__ =='__main__' and sys.argv[1]=='train':
                 val_labels[index][i] = 1
                 index += 1
     
+    # 建立会话管理
     with tf.Session() as sess:
         # 第一个卷积层
+        # 初始化W参数 truncated_normal 截尾正态分布 返回距离均值不超过2倍标准差的随机数
+        # 卷积核大小　8×８　原通道１　卷积核个数　１６
+        # 偏置　16*1
         W_conv1 = tf.Variable(tf.truncated_normal([8, 8, 1, 16], stddev=0.1), name="W_conv1")
         b_conv1 = tf.Variable(tf.constant(0.1, shape=[16]), name="b_conv1")
         conv_strides = [1, 1, 1, 1]
+        # pool 层
+        # [batch, height, width, channels]
         kernel_size = [1, 2, 2, 1]
+        # [1, stride,stride, 1]
         pool_strides = [1, 2, 2, 1]
         L1_pool = conv_layer(x_image, W_conv1, b_conv1, conv_strides, kernel_size, pool_strides, padding='SAME')
- 
+        # 第一层参数　(8×８*1+1) * 16 = 1040
+        # 输出大小:(32-2)/2+1 = 16　(40-2)/2+1 = 20 16×２0
+
         # 第二个卷积层
+        # 卷积核大小　5*5 ，上一层通道数１６，核个数３２
+        # 偏置层大小　３２＊１
         W_conv2 = tf.Variable(tf.truncated_normal([5, 5, 16, 32], stddev=0.1), name="W_conv2")
         b_conv2 = tf.Variable(tf.constant(0.1, shape=[32]), name="b_conv2")
         conv_strides = [1, 1, 1, 1]
+        # pool 层
         kernel_size = [1, 1, 1, 1]
         pool_strides = [1, 1, 1, 1]
         L2_pool = conv_layer(L1_pool, W_conv2, b_conv2, conv_strides, kernel_size, pool_strides, padding='SAME')
- 
- 
+　　　　　# 输出大小:
+　　　　　# 第一层参数　(５×５*１６+1) * ３２ = １２８３２
+        # 输出大小　(16 - 1) /1 +1 =16 ; (20 - 1) /1 +1 =20 16×２０
+
         # 全连接层
+        # １６×２０＊３２
         W_fc1 = tf.Variable(tf.truncated_normal([16 * 20 * 32, 512], stddev=0.1), name="W_fc1")
         b_fc1 = tf.Variable(tf.constant(0.1, shape=[512]), name="b_fc1")
         h_pool2_flat = tf.reshape(L2_pool, [-1, 16 * 20*32])
