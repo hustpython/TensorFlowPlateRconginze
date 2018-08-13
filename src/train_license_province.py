@@ -154,8 +154,8 @@ if __name__ =='__main__' and sys.argv[1]=='train':
         kernel_size = [1, 1, 1, 1]
         pool_strides = [1, 1, 1, 1]
         L2_pool = conv_layer(L1_pool, W_conv2, b_conv2, conv_strides, kernel_size, pool_strides, padding='SAME')
-　　　　　# 输出大小:
-　　　　　# 第二层参数　(５×５*１６+1) * ３２ = １２８３２
+        # 输出大小:
+        # 第二层参数　(５×５*１６+1) * ３２ = １２８３２
         # 输出大小　(16 - 1) /1 +1 =16 ; (20 - 1) /1 +1 =20 16×２０
 
         # 全连接层
@@ -166,8 +166,7 @@ if __name__ =='__main__' and sys.argv[1]=='train':
         # flatten 1 * ? * ? * 512 
         # 输出　512 个节点
         h_fc1 = full_connect(h_pool2_flat, W_fc1, b_fc1)
- 　　　　# 输出层　参数　512 ×　(１６＊３２＊20 + 1)
- 　　　　
+        # 输出层　参数　512 ×　(１６＊３２＊20 + 1)
         # dropout　防止过拟合
         # 给一定的概率keep_prob 让某一部分节点"不起作用",不参与更新（<1)
         # run和predice的时候keep_prob　＝　１
@@ -180,7 +179,7 @@ if __name__ =='__main__' and sys.argv[1]=='train':
         # 输出层１＊５１２　×　５１２　×　６　＝　６
         W_fc2 = tf.Variable(tf.truncated_normal([512, NUM_CLASSES], stddev=0.1), name="W_fc2")
         b_fc2 = tf.Variable(tf.constant(0.1, shape=[NUM_CLASSES]), name="b_fc2")
-　　　　　# 输出层参数:(512+1)*6=3078
+        # 输出层参数:(512+1)*6=3078
 
 
         # 定义优化器和训练op
@@ -199,10 +198,13 @@ if __name__ =='__main__' and sys.argv[1]=='train':
         
         cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y_conv))
         train_step = tf.train.AdamOptimizer((1e-4)).minimize(cross_entropy)
- 
+        # tf.argmax()返回最大数值的下标 
+        # dimension=0 按列找 
+        # dimension=1 按行找 
+    
         correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
- 
+        #print(accuracy)
         # 初始化saver
         saver = tf.train.Saver()
  
